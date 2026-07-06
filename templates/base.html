@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ config.titulo }}{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- CONTENEDOR STICKY: HEADER + FILTROS -->
+    <div class="sticky-header">
+        <!-- ENCABEZADO COMÚN (con imagen de fondo) -->
+        <div class="header">
+            <div class="container">
+                <div class="header-content">
+                    <!-- Teléfono a la izquierda -->
+                    <div class="header-left">
+                        <i class="fas fa-phone-alt"></i>
+                        <div>
+                            <span class="llamanos">Llamanos</span>
+                            <span class="telefonos">{{ config.tel_cc | int}} | {{ config.tel_suc1 | int}}</span>
+                        </div>
+                    </div>
+                    <!-- Título y subtítulo centrado -->
+                    <div class="header-center">
+                        <h1 class="titulo-principal">{{ config.titulo }}</h1>
+                        <p class="subtitulo">{{ config.subtitulo }}</p>
+                        <div class="nav-links">
+                            <a href="{{ url_for('tasaciones') }}">TASACIONES</a>
+                            <a href="{{ url_for('index') }}">PROPIEDADES</a>
+                            <a href="{{ url_for('emprendimientos') }}">EMPRENDIMIENTOS</a>
+                            <a href="{{ url_for('contacto') }}">CONTACTO</a>
+                        </div>
+                    </div>
+                    <div class="header-right"></div>
+                </div>
+            </div>
+            <!-- ÍCONOS DE REDES SOCIALES (abajo derecha) -->
+            <div class="social-icons">
+                <a href="#" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="#" target="_blank" title="TikTok"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+
+        <!-- BLOQUE PARA FILTROS (solo se llena en index.html) -->
+        {% block filtros %}{% endblock %}
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <div class="footer">
+        <div class="container">
+            <p class="mb-0">© {{ config.titulo }} - Todos los derechos reservados</p>
+        </div>
+    </div>
+
+<!-- BOTÓN FLOTANTE DE WHATSAPP -->
+<a href="https://api.whatsapp.com/send?phone=549{{ config.tel_whatsapp }}&text=Hola!%20Quisiera%20contactarme%20con%20ustedes%20por%20una%20consulta.%20Muchas%20gracias" 
+   target="_blank" 
+   class="whatsapp-float" 
+   title="Chatea con nosotros">
+    <i class="fab fa-whatsapp"></i>
+</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

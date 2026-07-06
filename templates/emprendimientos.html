@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Emprendimientos - {{ config.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <a href="{{ url_for('index') }}" class="volver-link">
+        <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
+
+    <h2>Emprendimientos</h2>
+    <p>Tenemos <strong>{{ emprendimientos|length }}</strong> emprendimientos para ofrecerte</p>
+
+    {% if emprendimientos %}
+    <div class="row g-4">
+        {% for emp in emprendimientos %}
+        <div class="col-md-4 col-lg-3">
+            <!-- Enlace a detalle de emprendimiento -->
+            <a href="{{ url_for('detalle_emprendimiento', id_propiedad=emp.id_propiedad) }}" class="text-decoration-none">
+                <div class="card property-card h-100">
+                    <img src="{{ emp.link_foto_inicio if emp.link_foto_inicio else 'https://via.placeholder.com/300x200?text=Sin+imagen' }}" 
+                         class="card-img-top" 
+                         alt="{{ emp.direccion }}"
+                         onerror="this.src='https://via.placeholder.com/300x200?text=Error+imagen'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge bg-secondary">{{ emp.tipo_inm }}</span>
+                            <span class="badge bg-success">{{ emp.tipo_op }}</span>
+                        </div>
+                        <h5 class="card-title text-dark">{{ emp.direccion }}</h5>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ emp.barrio }}
+                        </p>
+                        <p class="precio fw-bold text-danger fs-4">{{ emp.moneda }} {{ emp.precio | int }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        No hay emprendimientos disponibles.
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <p><i class="fas fa-comment"></i> Chatea con nosotros</p>
+    </div>
+</div>
+
+<style>
+    .property-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        background: white;
+        cursor: pointer;
+    }
+    .property-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .property-card img {
+        height: 200px;
+        width: 100%;
+        object-fit: cover;
+    }
+    .precio {
+        margin-top: 8px;
+    }
+    @media (max-width: 576px) {
+        .property-card img {
+            height: 160px;
+        }
+    }
+</style>
+{% endblock %}

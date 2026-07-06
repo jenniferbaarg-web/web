@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Tasaciones - {{ config.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Enlace Volver al listado -->
+    <a href="{{ url_for('index') }}" class="volver-link">
+        <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
+
+    <h2>Tasaciones</h2>
+    <p>Completá los datos de tu propiedad así te damos un valor aproximado.</p>
+
+    <form method="POST" action="{{ url_for('tasaciones') }}" class="row g-3">
+        <!-- Datos personales -->
+        <div class="col-12">
+            <h5>Datos personales</h5>
+        </div>
+        <div class="col-md-6">
+            <label for="nombre" class="form-label">Nombre y apellido:</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required>
+        </div>
+        <div class="col-md-6">
+            <label for="email" class="form-label">Email:</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="col-md-6">
+            <label for="telefono" class="form-label">Teléfono:</label>
+            <input type="text" class="form-control" id="telefono" name="telefono" required>
+        </div>
+        <div class="col-md-6">
+            <label for="horario" class="form-label">Horario de contacto:</label>
+            <input type="text" class="form-control" id="horario" name="horario">
+        </div>
+        <div class="col-12">
+            <label for="direccion" class="form-label">Dirección:</label>
+            <input type="text" class="form-control" id="direccion" name="direccion">
+        </div>
+
+        <!-- Datos del inmueble -->
+        <div class="col-12 mt-3">
+            <h5>Datos del inmueble</h5>
+        </div>
+        <div class="col-md-4">
+            <label for="operacion" class="form-label">Operación:</label>
+            <select class="form-select" id="operacion" name="operacion">
+                <option value="Venta">Venta</option>
+                <option value="Alquiler">Alquiler</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="tipo_propiedad" class="form-label">Tipo de propiedad:</label>
+            <select class="form-select" id="tipo_propiedad" name="tipo_propiedad">
+                <option value="Casa">Casa</option>
+                <option value="Departamento">Departamento</option>
+                <option value="PH">PH</option>
+                <option value="Local">Local</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="ambientes" class="form-label">Ambientes:</label>
+            <select class="form-select" id="ambientes" name="ambientes">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5+">5+</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="sup_cubierta" class="form-label">Sup. cubierta (m²):</label>
+            <input type="number" class="form-control" id="sup_cubierta" name="sup_cubierta" step="0.01">
+        </div>
+        <div class="col-md-6">
+            <label for="sup_total" class="form-label">Sup. total (m²):</label>
+            <input type="number" class="form-control" id="sup_total" name="sup_total" step="0.01">
+        </div>
+        <div class="col-md-6">
+            <label for="garage" class="form-label">Garage:</label>
+            <select class="form-select" id="garage" name="garage">
+                <option value="Si">Si</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div class="col-md-6 d-flex align-items-center">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="copia" name="copia">
+                <label class="form-check-label" for="copia">
+                    Recibir una copia de esta consulta por mail
+                </label>
+            </div>
+        </div>
+
+        <!-- Adicionales -->
+        <div class="col-12 mt-3">
+            <h5>Adicionales</h5>
+        </div>
+        <div class="col-12">
+            <label for="amenities" class="form-label">¿Qué amenities tiene?</label>
+            <input type="text" class="form-control" id="amenities" name="amenities">
+        </div>
+        <div class="col-12">
+            <label for="observaciones" class="form-label">Observaciones</label>
+            <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+    </form>
+    <div class="mt-3 text-muted fst-italic small">
+        Recordá que el formulario de tasaciones no implica la realización de una tasación online. A través del mismo la inmobiliaria podrá contar con datos previos para coordinar con vos y asesorarte en una tasación presencial del inmueble.
+    </div>
+</div>
+{% endblock %}

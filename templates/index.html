@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Propiedades - Jennifer Gauna{% endblock %}
+
+{% block filtros %}
+<!-- SECCIÓN DE FILTROS (sticky junto con el header) -->
+<div class="filter-section">
+    <div class="container">
+        <form method="GET" action="{{ url_for('index') }}" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="ubicacion" class="form-label">Ubicación</label>
+                <select class="form-select" id="ubicacion" name="ubicacion">
+                    {% for ub in ubicaciones %}
+                    <option value="{{ ub }}" {% if ub == ubicacion_seleccionada %}selected{% endif %}>
+                        {{ ub }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="operacion" class="form-label">Operación</label>
+                <select class="form-select" id="operacion" name="operacion">
+                    {% for op in operaciones %}
+                    <option value="{{ op }}" {% if op == operacion_seleccionada %}selected{% endif %}>
+                        {{ op }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="tipo" class="form-label">Tipo</label>
+                <select class="form-select" id="tipo" name="tipo">
+                    {% for t in tipos %}
+                    <option value="{{ t }}" {% if t == tipo_seleccionado %}selected{% endif %}>
+                        {{ t }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Propiedades destacadas</h2>
+    {% if propiedades %}
+    <div class="row g-4">
+        {% for prop in propiedades %}
+        <div class="col-md-4 col-lg-3">
+            <a href="{{ url_for('detalle_propiedad', id_propiedad=prop.id_propiedad) }}" class="text-decoration-none">
+                <div class="card property-card h-100">
+                    <img src="{{ prop.link_foto_inicio if prop.link_foto_inicio else 'https://via.placeholder.com/300x200?text=Sin+imagen' }}" 
+                         class="card-img-top" 
+                         alt="{{ prop.direccion }}"
+                         onerror="this.src='https://via.placeholder.com/300x200?text=Error+imagen'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge bg-secondary">{{ prop.tipo_inm }}</span>
+                            <span class="badge bg-success">{{ prop.tipo_op }}</span>
+                        </div>
+                        <h5 class="card-title text-dark">{{ prop.direccion }}</h5>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ prop.barrio }}
+                        </p>
+                        <p class="precio fw-bold text-danger fs-4">{{ prop.moneda }} {{ prop.precio | int }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        No hay propiedades que coincidan con los filtros seleccionados.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .property-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        background: white;
+        cursor: pointer;
+    }
+    .property-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .property-card img {
+        height: 200px;
+        width: 100%;
+        object-fit: cover;
+    }
+    .precio {
+        margin-top: 8px;
+    }
+    @media (max-width: 576px) {
+        .property-card img {
+            height: 160px;
+        }
+    }
+</style>
+{% endblock %}

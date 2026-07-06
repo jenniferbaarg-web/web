@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}{{ propiedad.direccion }} - {{ config.titulo }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .detalle-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .propiedad-imagen { width: 100%; max-height: 500px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .precio-grande { font-size: 2.5rem; font-weight: bold; color: #d32f2f; }
+    .comodidades-iconos { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; }
+    .comodidad-item { background: #f5f5f5; padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px; }
+    .comodidad-item i { color: #d32f2f; font-size: 1.2rem; }
+    .info-extra { background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 4px solid #d32f2f; margin: 15px 0; }
+    .codigo-propiedad { font-size: 0.9rem; color: #888; margin-top: 10px; }
+    .relacionadas .card { transition: 0.3s; }
+    .relacionadas .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .relacionadas .card img { height: 150px; object-fit: cover; }
+    .btn-volver { background: #6c757d; color: white; border: none; padding: 8px 20px; border-radius: 30px; text-decoration: none; }
+    .btn-volver:hover { background: #5a6268; color: white; }
+    .btn-galeria { background: #007bff; color: white; border: none; padding: 8px 20px; border-radius: 30px; text-decoration: none; display: inline-block; }
+    .btn-galeria:hover { background: #0056b3; color: white; }
+    .btn-galeria.disabled { opacity: 0.6; cursor: not-allowed; background: #6c757d; }
+    .btn-galeria.disabled:hover { background: #6c757d; }
+    .carousel-item img { max-height: 500px; width: 100%; object-fit: contain; background: #f8f9fa; }
+    .carousel-control-prev-icon, .carousel-control-next-icon {
+        background-color: rgba(0,0,0,0.6);
+        border-radius: 50%;
+        padding: 20px;
+        background-size: 50% 50%;
+    }
+    .carousel-indicators button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        margin: 0 5px;
+    }
+    .carousel-indicators .active {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    @media (max-width: 768px) { .precio-grande { font-size: 2rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detalle-container">
+    <a href="{{ url_for('index') }}" class="btn-volver mb-3 d-inline-block">
+        <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
+
+    <h1 class="mt-2">{{ propiedad.direccion }}</h1>
+    <p class="text-muted"><i class="fas fa-map-marker-alt"></i> {{ propiedad.barrio }}, {{ propiedad.direccion }}</p>
+
+    <!-- ============================================================
+         IMAGEN PRINCIPAL O CARRUSEL
+         ============================================================ -->
+    <div class="mb-4">
+        {% if imagenes_galeria and imagenes_galeria|length > 1 %}
+            <!-- CARRUSEL (cuando hay más de 1 foto) -->
+            <div id="carruselPropiedad" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    {% for img in imagenes_galeria %}
+                        <button type="button" data-bs-target="#carruselPropiedad"
+                                data-bs-slide-to="{{ loop.index0 }}"
+                                {% if loop.first %}class="active" aria-current="true"{% endif %}
+                                aria-label="Foto {{ loop.index }}"></button>
+                    {% endfor %}
+                </div>
+                <div class="carousel-inner" style="border-radius: 12px; overflow: hidden; background: #f8f9fa;">
+                    {% for img in imagenes_galeria %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ img }}" class="d-block w-100" alt="Foto de la propiedad">
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carruselPropiedad" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carruselPropiedad" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
+            </div>
+            <p class="text-muted small mt-2">
+                <i class="fas fa-images"></i> {{ imagenes_galeria|length }} fotos en total
+            </p>
+
+        {% elif propiedad.link_foto_inicio %}
+            <!-- IMAGEN PRINCIPAL (cuando no hay galería o solo 1 foto) -->
+            <img src="{{ propiedad.link_foto_inicio }}" class="propiedad-imagen"
+                 alt="{{ propiedad.direccion }}"
+                 onerror="this.src='https://via.placeholder.com/800x400?text=Sin+imagen'">
+
+        {% else %}
+            <!-- Sin imagen -->
+            <img src="https://via.placeholder.com/800x400?text=Sin+imagen" class="propiedad-imagen" alt="Sin imagen">
+        {% endif %}
+    </div>
+
+    <!-- ============================================================
+         DETALLES DE LA PROPIEDAD
+         ============================================================ -->
+    <div class="row">
+        <div class="col-md-7">
+            <!-- Precio con moneda primero y sin decimales -->
+            <div class="precio-grande">{{ propiedad.moneda }} {{ propiedad.precio | int }}</div>
+            <span class="badge bg-success fs-5 mt-2">{{ propiedad.tipo_op }}</span>
+            <span class="badge bg-secondary fs-5 mt-2">{{ propiedad.tipo_inm }}</span>
+            <div class="codigo-propiedad">CÓDIGO DE PROPIEDAD: {{ propiedad.id_propiedad | int }}</div>
+
+            <div class="mt-4">
+                <h5>Acerca de la propiedad</h5>
+                <p>
+                    {% if propiedad.tipo_inm == 'Casa' %}Casa{% elif propiedad.tipo_inm == 'Departamento' %}Departamento{% else %}Propiedad{% endif %}
+                    en <strong>{{ propiedad.barrio }}</strong>.
+                    {% if propiedad.ambientes %}Consta de {{ propiedad.ambientes | int }} ambientes,{% endif %}
+                    {% if propiedad.dormitorios %}{{ propiedad.dormitorios | int }} dormitorios,{% endif %}
+                    {% if propiedad.banos %}{{ propiedad.banos | int }} baños,{% endif %}
+                    {% if propiedad.cocheras %}{{ propiedad.cocheras | int }} cocheras.{% endif %}
+                    {% if propiedad.sup_cubierta %}Superficie cubierta: {{ propiedad.sup_cubierta | int }} m².{% endif %}
+                    {% if propiedad.sup_total %}Superficie total: {{ propiedad.sup_total | int }} m².{% endif %}
+                    {% if propiedad.antiguedad %}Antigüedad: {{ propiedad.antiguedad | int }} años.{% endif %}
+                    {% if propiedad.estado %}Estado: {{ propiedad.estado }}.{% endif %}
+                </p>
+
+	{% if propiedad.detalle %}
+	<div class="info-extra">
+    		<h5 style="font-weight: bold; margin-bottom: 10px;">		Información adicional</h5>
+    		{{ propiedad.detalle | safe }}
+	</div>
+	{% else %}
+	<div class="info-extra">
+    		<p class="mb-0">Sin información adicional</p>
+	</div>
+	{% endif %}            
+	
+</div>
+
+            <div class="mt-4">
+                <h5>Ubicación</h5>
+                <p><i class="fas fa-map-pin"></i> {{ propiedad.direccion }}, {{ propiedad.barrio }}</p>
+                <a href="https://www.google.com/maps/search/?api=1&query={{ propiedad.direccion | urlencode }},{{ propiedad.barrio | urlencode }}"
+                   target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-map-marked-alt"></i> Ver en Google Maps
+                </a>
+            </div>
+
+            <div class="mt-4">
+                <h5>Comodidades</h5>
+                <div class="comodidades-iconos">
+                    {% if propiedad.ambientes %}<span class="comodidad-item"><i class="fas fa-door-open"></i> {{ propiedad.ambientes | int }} ambientes</span>{% endif %}
+                    {% if propiedad.dormitorios %}<span class="comodidad-item"><i class="fas fa-bed"></i> {{ propiedad.dormitorios | int }} dormitorios</span>{% endif %}
+                    {% if propiedad.banos %}<span class="comodidad-item"><i class="fas fa-bath"></i> {{ propiedad.banos | int }} baños</span>{% endif %}
+                    {% if propiedad.cocheras %}<span class="comodidad-item"><i class="fas fa-car"></i> {{ propiedad.cocheras | int }} cochera(s)</span>{% endif %}
+                    {% if propiedad.sup_cubierta %}<span class="comodidad-item"><i class="fas fa-ruler-combined"></i> {{ propiedad.sup_cubierta | int }} m² cubiertos</span>{% endif %}
+                    {% if propiedad.sup_total %}<span class="comodidad-item"><i class="fas fa-vector-square"></i> {{ propiedad.sup_total | int }} m² totales</span>{% endif %}
+                    {% if propiedad.antiguedad %}<span class="comodidad-item"><i class="fas fa-calendar-alt"></i> {{ propiedad.antiguedad | int }} años</span>{% endif %}
+                    {% if propiedad.expensas %}<span class="comodidad-item"><i class="fas fa-coins"></i> Expensas: {{ propiedad.expensas | int }}</span>{% endif %}
+                    <span class="comodidad-item"><i class="fas fa-wifi"></i> Internet</span>
+                    <span class="comodidad-item"><i class="fas fa-tv"></i> TV</span>
+                    <span class="comodidad-item"><i class="fas fa-utensils"></i> Cocina equipada</span>
+                </div>
+            </div>
+
+            {% if relacionadas %}
+            <div class="mt-5 relacionadas">
+                <h5>Propiedades relacionadas</h5>
+                <div class="row g-3">
+                    {% for rel in relacionadas[:4] %}
+                    {% if rel.id_propiedad != propiedad.id_propiedad %}
+                    <div class="col-6 col-md-3">
+                        <a href="{{ url_for('detalle_propiedad', id_propiedad=rel.id_propiedad) }}" class="text-decoration-none">
+                            <div class="card">
+                                <img src="{{ rel.link_foto_inicio if rel.link_foto_inicio else 'https://via.placeholder.com/300x200?text=Sin+imagen' }}"
+                                     class="card-img-top" alt="{{ rel.direccion }}"
+                                     onerror="this.src='https://via.placeholder.com/300x200?text=Error'">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title small">{{ rel.direccion }}</h6>
+                                    <p class="card-text small text-danger fw-bold">{{ rel.moneda }} {{ rel.precio | int }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-5">
+            <div class="card p-3">
+                <h5>Comunicate con nosotros</h5>
+                <form>
+                    <div class="mb-2">
+                        <label for="nombre" class="form-label">Nombre y apellido</label>
+                        <input type="text" class="form-control" id="nombre" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <input type="text" class="form-control" id="telefono">
+                    </div>
+                    <div class="mb-2">
+                        <label for="mensaje" class="form-label">Mensaje</label>
+                        <textarea class="form-control" id="mensaje" rows="3">Hola, me interesa esta propiedad que vi en tu web y quisiera que me contacten. Muchas gracias.</textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="copia" checked>
+                        <label class="form-check-label" for="copia">Recibir una copia de esta consulta por mail</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Enviar consulta</button>
+                </form>
+                <div class="mt-3 text-center">
+                    <small>Para más información comunicarse al <strong>{{ config.tel_cc | int }}</strong></small>
+                    <br>
+                    <small class="text-muted">
+                        Oficinas: {{ config.direccion_cc }} / {{ config.direccion_suc1 }} / {{ config.direccion_suc2 }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

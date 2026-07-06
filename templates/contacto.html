@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Contacto - {{ config.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Enlace Volver al listado -->
+    <a href="{{ url_for('index') }}" class="volver-link">
+        <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
+
+    <div class="row">
+        <!-- Formulario -->
+        <div class="col-md-6">
+            <h2>Comunicate con nosotros</h2>
+            <form method="POST" action="{{ url_for('contacto') }}">
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre y apellido</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="telefono" class="form-label">Teléfono</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono">
+                </div>
+                <div class="mb-3">
+                    <label for="mensaje" class="form-label">Mensaje</label>
+                    <textarea class="form-control" id="mensaje" name="mensaje" rows="4" required></textarea>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="copia" name="copia">
+                    <label class="form-check-label" for="copia">Recibir una copia de esta consulta por mail</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Enviar consulta</button>
+            </form>
+        </div>
+
+        <!-- Datos de contacto desde config -->
+        <div class="col-md-3">
+            <h5>Oficinas</h5>
+            <ul class="list-unstyled">
+                <li><strong>Casa Central:</strong><br>{{ config.direccion_cc }}<br>Tel: {{ config.tel_cc | int }}</li>
+                <li class="mt-2"><strong>Sucursal 1:</strong><br>{{ config.direccion_suc1 }}<br>Tel: {{ config.tel_suc1 | int }}</li>
+                <li class="mt-2"><strong>Sucursal 2:</strong><br>{{ config.direccion_suc2 }}<br>Tel: {{ config.tel_suc2 | int }}</li>
+            </ul>
+        </div>
+
+        <!-- Redes Sociales y otros -->
+        <div class="col-md-3">
+            <h5>Nuestras redes</h5>
+            <div class="social-links">
+                <a href="#" class="d-block text-decoration-none text-dark"><i class="fab fa-facebook"></i> Facebook</a>
+                <a href="#" class="d-block text-decoration-none text-dark"><i class="fab fa-instagram"></i> Instagram</a>
+                <a href="#" class="d-block text-decoration-none text-dark"><i class="fab fa-twitter"></i> Twitter</a>
+                <a href="#" class="d-block text-decoration-none text-dark"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+            </div>
+            <br>
+            <p><i class="fas fa-comment"></i> Chatea con nosotros</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
