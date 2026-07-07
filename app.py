@@ -1,11 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import pandas as pd
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_para_flash_messages'
+
+# ============================================================
+# CONFIGURACIÓN DE CACHÉ (TTL en segundos)
+# ============================================================
+CACHE_TTL = 300  # 5 minutos
+
+# Variables globales para caché
+_cache_propiedades = {
+    'data': None,
+    'timestamp': 0
+}
+_cache_emprendimientos = {
+    'data': None,
+    'timestamp': 0
+}
 
 # ============================================================
 # 1. CONFIGURACIÓN (cargar desde Excel o fallback)
@@ -62,20 +78,18 @@ def inject_config():
     return dict(config=config)
 
 # ============================================================
-# 3. CARGA DE DATOS DESDE GOOGLE SHEETS
+# 3. CARGA DE DATOS DESDE GOOGLE SHEETS (con caché)
 # ============================================================
 
 # --- URLs de Google Sheets ---
 URL_PROPIEDADES = "https://docs.google.com/spreadsheets/d/1YH2_Q8fvimzMQgRDDIrBbI-HziJ270I3KLgA8xf1l9g/edit?usp=sharing"
 CSV_PROPIEDADES = URL_PROPIEDADES.replace("/edit?usp=sharing", "/export?format=csv")
 
-# URL para emprendimientos (la que me proporcionaste)
 URL_EMPRENDIMIENTOS = "https://docs.google.com/spreadsheets/d/1PfSkmk28Wec7LSWhqx1siQqGqd97KaCt/edit?usp=sharing"
 CSV_EMPRENDIMIENTOS = URL_EMPRENDIMIENTOS.replace("/edit?usp=sharing", "/export?format=csv")
 
-
 def load_emprendimientos():
-    """Carga datos de emprendimientos desde Google Sheets."""
+    """Carga datos de emprendimientos desde Google Sheets (sin caché)."""
     try:
         df = pd.read_csv(CSV_EMPRENDIMIENTOS)
         df.columns = df.columns.str.strip()
@@ -104,7 +118,9 @@ def load_emprendimientos():
              'direccion': 'Av. Principal 123', 'barrio': 'Centro', 'precio': 150000, 'moneda': 'U$S',
              'link_foto_inicio': '/static/imagenes_emp/emp001.jpg', 'detalle': 'Excelente oportunidad'},
         ])
+
 def load_propiedades():
+    """Carga datos de propiedades desde Google Sheets (sin caché)."""
     try:
         df = pd.read_csv(CSV_PROPIEDADES)
         df.columns = df.columns.str.strip()
@@ -121,20 +137,40 @@ def load_propiedades():
                               'dormitorios', 'banos', 'cocheras', 'antiguedad', 'expensas']
         for col in columnas_numericas:
             if col in df.columns:
-                # Reemplazar valores vacíos o no numéricos con 0 y convertir a int
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
         
-        # id_propiedad debe ser string para las URLs
         df['id_propiedad'] = df['id_propiedad'].astype(str)
-        
         return df.fillna('')
     except Exception as e:
         print(f"❌ Error al cargar propiedades: {e}")
         return pd.DataFrame(columns=['id_propiedad', 'tipo_op', 'tipo_inm', 'direccion', 'barrio',
                                      'precio', 'moneda', 'link_foto_inicio', 'detalle', 'galeria'])
 
-df_propiedades = load_propiedades()
-df_emprendimientos = load_emprendimientos()
+# ============================================================
+# FUNCIONES DE ACCESO A DATOS CON CACHÉ
+# ============================================================
+
+def get_propiedades():
+    """Devuelve los datos de propiedades, recargando si la caché ha expirado."""
+    global _cache_propiedades
+    ahora = time.time()
+    if (_cache_propiedades['data'] is None or 
+        ahora - _cache_propiedades['timestamp'] > CACHE_TTL):
+        print("🔄 Recargando datos de propiedades...")
+        _cache_propiedades['data'] = load_propiedades()
+        _cache_propiedades['timestamp'] = ahora
+    return _cache_propiedades['data']
+
+def get_emprendimientos():
+    """Devuelve los datos de emprendimientos, recargando si la caché ha expirado."""
+    global _cache_emprendimientos
+    ahora = time.time()
+    if (_cache_emprendimientos['data'] is None or 
+        ahora - _cache_emprendimientos['timestamp'] > CACHE_TTL):
+        print("🔄 Recargando datos de emprendimientos...")
+        _cache_emprendimientos['data'] = load_emprendimientos()
+        _cache_emprendimientos['timestamp'] = ahora
+    return _cache_emprendimientos['data']
 
 # ============================================================
 # 4. FUNCIÓN PARA ENVIAR CORREOS
@@ -183,6 +219,7 @@ def send_email(destinatario, asunto, mensaje_html, mensaje_plain=None):
 
 @app.route('/')
 def index():
+    df_propiedades = get_propiedades()
     ubicacion = request.args.get('ubicacion', 'Todas')
     operacion = request.args.get('operacion', 'Todas')
     tipo = request.args.get('tipo', 'Todos')
@@ -210,11 +247,13 @@ def index():
 
 @app.route('/emprendimientos')
 def emprendimientos():
+    df_emprendimientos = get_emprendimientos()
     emprendimientos = df_emprendimientos.to_dict('records')
     return render_template('emprendimientos.html', emprendimientos=emprendimientos)
 
 @app.route('/propiedad/<id_propiedad>')
 def detalle_propiedad(id_propiedad):
+    df_propiedades = get_propiedades()
     df = df_propiedades.copy()
     propiedad = df[df['id_propiedad'].astype(str) == str(id_propiedad)]
     
@@ -226,7 +265,6 @@ def detalle_propiedad(id_propiedad):
     # Obtener imágenes de la galería desde la columna 'galeria' (separadas por comas)
     imagenes_galeria = []
     if prop.get('galeria'):
-        # Dividir por comas, eliminar espacios en blanco y filtrar vacíos
         imagenes_galeria = [url.strip() for url in prop['galeria'].split(',') if url.strip()]
     
     # Si no hay imágenes en 'galeria', usar link_foto_inicio como fallback
@@ -318,6 +356,7 @@ def contacto():
 @app.route('/emprendimiento/<id_propiedad>')
 def detalle_emprendimiento(id_propiedad):
     """Página de detalle para un emprendimiento específico."""
+    df_emprendimientos = get_emprendimientos()
     df = df_emprendimientos.copy()
     propiedad = df[df['id_propiedad'].astype(str) == str(id_propiedad)]
     
@@ -344,6 +383,17 @@ def detalle_emprendimiento(id_propiedad):
                            propiedad=prop,
                            relacionadas=relacionadas,
                            imagenes_galeria=imagenes_galeria)
+
+@app.route('/reload-data')
+def reload_data():
+    """Fuerza la recarga de datos desde Google Sheets."""
+    global _cache_propiedades, _cache_emprendimientos
+    print("🔄 Recarga manual forzada de datos...")
+    _cache_propiedades['data'] = load_propiedades()
+    _cache_propiedades['timestamp'] = time.time()
+    _cache_emprendimientos['data'] = load_emprendimientos()
+    _cache_emprendimientos['timestamp'] = time.time()
+    return "✅ Datos recargados correctamente. <a href='/'>Volver al inicio</a>"
 
 @app.errorhandler(404)
 def page_not_found(e):
